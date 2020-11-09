@@ -105,14 +105,14 @@ class paysafecashConfirmationModuleFrontController extends ModuleFrontController
                                 Db::getInstance()->execute($query);
 
                                 if (Order::getOrderByCartId((int)($cart->id)) == null) {
-                                    exec('echo "Confirm: Create Order" >> ' . getcwd() . '/modules/paysafecash/log.log');
+
                                     $message = "Payment: ";
                                     $module_name = $this->module->displayName;
                                     $payment_status = Configuration::get('PAYSAFECASH_OS_PAID');
                                     $secure_key = Context::getContext()->customer->secure_key;
                                     $this->module->validateOrder($cart_id, $payment_status, $cart->getOrderTotal(), $module_name, $message, array(), $currency_id, false, $secure_key);
                                 } else {
-                                    exec('echo "Confirm: order" >> ' . getcwd() . '/modules/paysafecash/log.log');
+
                                 }
 
                                 $order->addOrderPayment($order->total_paid, null, $payment_id);

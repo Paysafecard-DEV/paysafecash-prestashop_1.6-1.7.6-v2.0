@@ -51,7 +51,6 @@ class paysafecash extends PaymentModule
         $this->limited_currencies = array('EUR', 'CHF', 'USD', 'GBP');
 
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
-
     }
 
     /**
@@ -228,7 +227,7 @@ class paysafecash extends PaymentModule
         if (((bool)Tools::isSubmit('submitPaysafecashModule')) == true) {
             $this->postProcess();
         }
-        exec('echo "Refund Form: '.print_r($_POST, true).'" >> '.getcwd().'/modules/paysafecash/log.log');
+
         if (((bool)Tools::isSubmit('refundPaysafecashModule')) == true) {
             $payment = $_POST["payment_id"];
             $amount = $_POST["payment_amount"];
@@ -320,9 +319,6 @@ class paysafecash extends PaymentModule
 
     protected function processRefund($payment_id, $amount){
         $correlation_id = "";
-
-        exec('echo "Refund Detail: " >> '.getcwd().'/modules/paysafecash/log.log');
-
         require_once(_PS_MODULE_DIR_ . "paysafecash/libs/RefundClass.php");
 
         $testmode = Configuration::get('PAYSAFECASH_TEST_MODE');
@@ -334,13 +330,11 @@ class paysafecash extends PaymentModule
         }
 
         $pscrefund = new PaysafecardCashRefundController(Configuration::get('PAYSAFECASH_API_KEY'), $env);
-
         $paymentDetail = $pscrefund->getPaymentDetail($payment_id);
 
-        exec('echo "Refund Detail: '.print_r($paymentDetail, true).'" >> '.getcwd().'/modules/paysafecash/log.log');
-
         $refunded     = $pscrefund->getRefundedAmount();
-        if($amount > $refunded){
+        if($amount > ($paymentDetail["card_details"][0]["amount"] - $refunded)){
+            $this->context->controller->errors[] = $this->l('The refund is higher than the Transaction.');
             return false;
         }
 
@@ -444,13 +438,6 @@ class paysafecash extends PaymentModule
     public function hookDisplayPaymentReturn($params)
     {
         return $this->hookPaymentReturn($params);
-    }
-
-
-    public function hookDisplayAdminOrder($params)
-    {
-        //echo __FILE__, 'views/templates/admin/transactions.tpl';
-        //return $this->displayList();
     }
 
     public function displayList()

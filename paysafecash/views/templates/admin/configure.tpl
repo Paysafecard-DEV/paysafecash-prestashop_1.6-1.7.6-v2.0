@@ -14,8 +14,6 @@
 	</div>
 
 </div>
-    {$fields_value|@print_r}
-
 		<div style="background-color: #eaebec; padding: 20px;">
 			<ul class="nav nav-tabs" id="myTab" role="tablist">
 				<li class="nav-item">

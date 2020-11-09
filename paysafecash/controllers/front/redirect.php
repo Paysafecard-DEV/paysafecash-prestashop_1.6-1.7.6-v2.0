@@ -53,10 +53,7 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
             } else {
                 $env = "PRODUCTION";
             }
-            exec('echo "CURR: ' . print_r($cart, true) . '" >> ' . getcwd() . '/modules/paysafecash/presta.log');
 
-            exec('echo "Key: ' . print_r(Configuration::get('PAYSAFECASH_API_KEY'), true) . '" >> ' . getcwd() . '/modules/paysafecash/presta.log');
-            exec('echo "ENV: ' . $testmode . '" >> ' . getcwd() . '/modules/paysafecash/presta.log');
             $pscpayment = new PaysafecardCashController(Configuration::get('PAYSAFECASH_API_KEY'), $env);
             $success_url = Context::getContext()->link->getModuleLink(
                 'paysafecash',
@@ -109,10 +106,9 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
 
             if (isset($response["object"])) {
 
-                exec('echo "Order: ' . print_r($order, true) . '" >> ' . getcwd() . '/modules/paysafecash/presta.log');
-                exec('echo "Response: ' . print_r($pscpayment->getResponse(), true) . '" >> ' . getcwd() . '/modules/paysafecash/presta.log');
+
                 $query = 'INSERT INTO `' . _DB_PREFIX_ . "paysafecashtransaction` (`transaction_id`, `transaction_time`, `order_id`, `status`) VALUES ( '" . $response["id"] . "', '" . $cart->date_upd . "', '" . $order->id . "', '" . $response["status"] . "'); ";
-                exec('echo "QUERY: ' . $query . '" >> ' . getcwd() . '/modules/paysafecash/presta.log');
+
                 Db::getInstance()->Execute($query);
                 $this->context->smarty->assign(array(
                     'redirect_url' => $response["redirect"]['auth_url']
