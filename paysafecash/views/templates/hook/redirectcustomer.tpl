@@ -1,8 +1,8 @@
 <div>
     {if $payed}
-        {l s='Vielen Dank, Ihre Bestellung ist erfolgreich bezahlt' mod='paysafecash'}
+        {l s='Thank you, your order has been paid for successfully' mod='paysafecash'}
     {/if}
     {if $topay}
-        {l s='Bitte gehen Sie zum nächsten Shop um Ihre Bestellung zu bezahlen.' mod='paysafecash'}
+        {l s='Please go to the nearest shop to pay for your order.' mod='paysafecash'}
     {/if}
 </div>

@@ -43,7 +43,7 @@ class paysafecash extends PaymentModule
         parent::__construct();
 
         $this->displayName = $this->l('Paysafecash');
-        $this->description = $this->l('Paysafecash is a cash payment option. Generate a QR/barcode and pay at a nearby shop.More information and our payment points can be found at www.paysafecash.com');
+        $this->description = $this->l('Paysafecash is a cash payment option. Generate a QR/barcode and pay at a nearby shop. More information and our payment points can be found at www.paysafecash.com');
         $this->confirmUninstall = $this->l('Do you really want to remove this application?');
 
         $this->limited_countries = array('LU','ES', 'CH', 'DK', 'PL', 'IE', 'RO', 'BG', 'BE', 'HR', 'LV', 'AT', 'SI', 'NL', 'SK', 'CZ', 'FR', 'MT', 'HI', 'IT', 'PT', 'CA', 'DE' );
@@ -203,7 +203,6 @@ class paysafecash extends PaymentModule
         return $tab->delete();
     }
 
-
     public function uninstall()
     {
         $this->uninstallOrderState();
@@ -265,8 +264,6 @@ class paysafecash extends PaymentModule
         );
         return $helper->generateForm(array($this->getConfigForm()));
     }
-
-
     protected function getConfigFormValues()
     {
         return array(
@@ -307,7 +304,6 @@ class paysafecash extends PaymentModule
         return $payment_options;
     }
 
-
     protected function postProcess()
     {
         $form_values = $this->getConfigFormValues();
@@ -334,7 +330,7 @@ class paysafecash extends PaymentModule
 
         $refunded     = $pscrefund->getRefundedAmount();
         if($amount > ($paymentDetail["card_details"][0]["amount"] - $refunded)){
-            $this->context->controller->errors[] = $this->l('The refund is higher than the Transaction.');
+            $this->context->controller->errors[] = $this->l('The refund amount is higher than the Transaction amount.');
             return false;
         }
 
@@ -348,8 +344,6 @@ class paysafecash extends PaymentModule
             }
         }
     }
-
-
     /**
      * Add the CSS & JavaScript files you want to be added on the FO.
      */
