@@ -105,9 +105,7 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
             $response = $pscpayment->initiatePayment($ordertotal, $currency->iso_code, md5(Context::getContext()->customer->id), $ip, $success_url, $failure_url, $notification_url . "&payment_id={payment_id}", $customer_data, $time_limit, $correlation_id = "", $country_restriction = "", $kyc_restriction = "", $min_age = "", $shop_id = "Presta: " . _PS_VERSION_ . " | " . $this->version, Configuration::get('PAYSAFECASH_SUBMERCHANT_ID'));
 
             if (isset($response["object"])) {
-
-
-                $query = 'INSERT INTO `' . _DB_PREFIX_ . "paysafecashtransaction` (`transaction_id`, `transaction_time`, `order_id`, `status`) VALUES ( '" . $response["id"] . "', '" . $cart->date_upd . "', '" . $order->id . "', '" . $response["status"] . "'); ";
+                $query = 'INSERT INTO `' . _DB_PREFIX_ . "paysafecashtransaction` (`transaction_id`, `transaction_time`, `order_id`, `cart_id`, `status`) VALUES ( '" . $response["id"] . "', '" . $cart->date_upd . "', '" . $order->id . "', '" . $cart->id. "', '" . $response["status"] . "'); ";
 
                 Db::getInstance()->Execute($query);
                 $this->context->smarty->assign(array(

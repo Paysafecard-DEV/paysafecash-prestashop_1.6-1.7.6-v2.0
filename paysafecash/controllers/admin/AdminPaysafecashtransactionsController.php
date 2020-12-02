@@ -22,24 +22,17 @@ class AdminPaysafecashtransactionsController extends ModuleAdminController
             'id' => ['title' => 'ID','class' => 'fixed-width-xs'],
             'transaction_id' => ['title' => 'Transaction ID'],
             'order_id' => ['title' => 'Order ID'],
+            'cart_id' => ['title' => 'Cart ID'],
             'status' => ['title' => 'Status'],
             'transaction_time' => ['title' => 'Created','type'=>'datetime'],
         ];
 
         if(isset($_GET["updatepaysafecashtransaction"])){
-            $this->displayUpdatepaysafecashtransactionAction();
+           // $this->displayUpdatepaysafecashtransactionAction();
         }
-
-        exec('echo "QUERY: '.print_r( parent::getFromClause(), true).'" >> '.getcwd().'/modules/paysafecash/log.log');
-    }
-    public function initContent()
-    {
-        exec('echo "QUERY: '.print_r( parent::getFromClause(), true).'" >> '.getcwd().'/modules/paysafecash/log.log');
     }
 
-    protected function getFromClause() {
-        exec('echo "QUERY: '.print_r( parent::getFromClause(), true).'" >> '.getcwd().'/modules/paysafecash/log.log');
-        return str_replace(_DB_PREFIX_, '', parent::getFromClause());
+    public function getFromClause(){
 
     }
 
@@ -49,23 +42,6 @@ class AdminPaysafecashtransactionsController extends ModuleAdminController
         $content = $this->context->smarty->fetch(_PS_MODULE_DIR_ . 'paysafecash/views/templates/admin/transactions.tpl');
         $this->context->smarty->assign(array(
             "content" => $content,
-        ));
-
-
-        //return $this->display(_PS_MODULE_DIR_ . 'paysafecash/views/templates/admin/transactions.tpl');
-
-
-        //print_r($GLOBALS);
-        //return $this->template(__FILE__, 'views/templates/admin/transactions.tpl');
-    }
-
-    public function ajaxProcess()
-    {
-        $query = 'SELECT * FROM `'._DB_PREFIX_.'paysafecashtransaction`;';
-        exec('echo "QUERY: '.print_r( $query, true).'" >> '.getcwd().'/modules/paysafecash/log.log');
-        echo Tools::jsonEncode(array(
-            'data'=> Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query),
-            'fields_display' => $this->fieldsDisplay
         ));
     }
 

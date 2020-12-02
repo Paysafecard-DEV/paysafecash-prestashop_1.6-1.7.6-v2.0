@@ -31,6 +31,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'paysafecashtransaction` (
     `transaction_id` VARCHAR(55) NULL,
     `transaction_time` VARCHAR(70) NULL,
     `order_id` VARCHAR(20) NULL,
+    `cart_id` INT(20) NOT NULL,
     `status` VARCHAR(10) NULL,
     PRIMARY KEY  (`id_paysafecashtransaction`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
