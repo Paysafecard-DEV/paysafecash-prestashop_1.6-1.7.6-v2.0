@@ -47,6 +47,7 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
             $order = new Order($order_id);
             $address = new Address($this->context->cart->id_address_invoice);
             $testmode = Configuration::get('PAYSAFECASH_TEST_MODE');
+            $debugmode = Configuration::get('PAYSAFECASH_TEST_MODE');
 
             if ($testmode == "1") {
                 $env = "TEST";
@@ -95,7 +96,6 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
                     "postcode" => $address->postcode,
                     "city" => $address->city,
                     "phone_number" => $address->phone,
-                    //"email"        => $order->getCustomer()->email
                 ];
             } else {
                 $customer_data = array();
@@ -104,13 +104,23 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
             $ordertotal = $cart->getOrderTotal(true, Cart::BOTH);
             $response = $pscpayment->initiatePayment($ordertotal, $currency->iso_code, md5(Context::getContext()->customer->id), $ip, $success_url, $failure_url, $notification_url . "&payment_id={payment_id}", $customer_data, $time_limit, $correlation_id = "", $country_restriction = "", $kyc_restriction = "", $min_age = "", $shop_id = "Presta: " . _PS_VERSION_ . " | " . $this->version, Configuration::get('PAYSAFECASH_SUBMERCHANT_ID'));
 
+            if ($debugmode == "1") {
+                Logger::AddLog(json_encode($response), 1);
+            }
+
             if (isset($response["object"])) {
-                $query = 'INSERT INTO `' . _DB_PREFIX_ . "paysafecashtransaction` (`transaction_id`, `transaction_time`, `order_id`, `cart_id`, `status`) VALUES ( '" . $response["id"] . "', '" . $cart->date_upd . "', '" . $order->id . "', '" . $cart->id. "', '" . $response["status"] . "'); ";
+                $query = 'INSERT INTO `' . _DB_PREFIX_ . "paysafecashtransaction` (`transaction_id`, `transaction_time`, `order_id`, `cart_id`, `status`) VALUES ( '" . $response["id"] . "', '" . $cart->date_upd . "', '" . $order->id . "', '" . $cart->id . "', '" . $response["status"] . "'); ";
 
                 Db::getInstance()->Execute($query);
                 $this->context->smarty->assign(array(
                     'redirect_url' => $response["redirect"]['auth_url']
                 ));
+
+                $message = "Payment: ";
+                $module_name = $this->module->displayName;
+                $payment_status = Configuration::get('PAYSAFECASH_OS_WAITING');
+                $secure_key = Context::getContext()->customer->secure_key;
+                $this->module->validateOrder((int)$cart->id, $payment_status, $cart->getOrderTotal(), $module_name, $message, array(), (int)$currency->id, false, $secure_key);
 
                 header("Location: " . $response["redirect"]['auth_url']);
 

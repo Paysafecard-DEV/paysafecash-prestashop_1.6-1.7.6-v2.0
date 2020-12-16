@@ -38,13 +38,32 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
         $customer = new Customer((int)$cart->id_customer);
         $message = null;
         $order_id = Order::getOrderByCartId((int)$cart->id);
+        $testmode = Configuration::get('PAYSAFECASH_TEST_MODE');
+        $debugmode = Configuration::get('PAYSAFECASH_DEBUG');
 
         $rsa = new RSA();
         $rsa->loadKey("-----BEGIN RSA PUBLIC KEY-----\n" . str_replace(" ", "", Configuration::get('PAYSAFECASH_WEBHOOK_KEY')) . "\n-----END RSA PUBLIC KEY-----");
         $pubkey = openssl_pkey_get_public($rsa->getPublicKey());
         $signatur_check = openssl_verify($payment_str, base64_decode($signature), $pubkey, OPENSSL_ALGO_SHA256);
+        if ($signatur_check == 1) {
+            if ($debugmode == "1") {
+                Logger::AddLog("paysafecash WEBHOOK: Signature OK", 1);
+            }
+        } else {
+            if ($debugmode == "1") {
+                Logger::AddLog("paysafecash WEBHOOK: Signature Error", 1);
+                Logger::AddLog("paysafecash WEBHOOK: Header->" . json_encode(apache_request_headers()), 1);
+                Logger::AddLog("paysafecash WEBHOOK: Signaturer->" . $signature, 1);
+                Logger::AddLog("paysafecash WEBHOOK: Key->" . Configuration::get('PAYSAFECASH_WEBHOOK_KEY'), 1);
+
+            }
+        }
 
         openssl_free_key($pubkey);
+
+        if ($debugmode == "1") {
+            Logger::AddLog("paysafecash WEBHOOK Content: " . json_encode($payment_str), 1);
+        }
 
         $cart = new Cart((int)$cart_id);
         $currency_id = $cart->id_currency;
@@ -59,11 +78,16 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
 
         if (file_exists(getcwd() . "/modules/paysafecash/skipverification")) {
             $skip_validation = true;
+            if ($debugmode == "1") {
+                Logger::AddLog("paysafecash: webhook validation disabled", 1);
+            }
         }
-
 
         if ($signatur_check == 1 || $skip_validation == true) {
             if ($payment_str->eventType == "PAYMENT_CAPTURED") {
+                if ($debugmode == "1") {
+                    Logger::AddLog("paysafecash WEBHOOK: PAYMENT_CAPTURED", 1);
+                }
                 if ($skip_validation) {
                     if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
                         $ip = $_SERVER['HTTP_CLIENT_IP'];
@@ -85,6 +109,9 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
 
                         $pscpayment = new PaysafecardCashController(Configuration::get('PAYSAFECASH_API_KEY'), $env);
                         $response = $pscpayment->retrievePayment($payment_id);
+                        if ($debugmode == "1") {
+                            Logger::AddLog(json_encode($response), 1);
+                        }
 
                         if ($response == false) {
                             return $this->display(__FILE__, 'module:paysafecash/views/templates/front/webhook.tpl');
@@ -113,6 +140,10 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
                                 return $this->display(__FILE__, 'module:paysafecash/views/templates/front/webhook.tpl');
                             }
                         }
+                    } else {
+                        if ($debugmode == "1") {
+                            Logger::AddLog("paysafecash WEBHOOK: IP validation failed!", 1);
+                        }
                     }
 
                 } else {
@@ -127,6 +158,9 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
                 }
             }
             if ($payment_str->eventType == "PAYMENT_EXPIRED") {
+                if ($debugmode == "1") {
+                    Logger::AddLog("paysafecash WEBHOOK: PAYMENT_EXPIRED", 1);
+                }
                 $query = 'UPDATE `' . _DB_PREFIX_ . "paysafecashtransaction` SET `status` = 'EXPIRED' WHERE `prstshp_paysafecashtransaction`.`transaction_id` = '" . $payment_id . "';";
                 $results = Db::getInstance()->execute($query);
                 $history = new OrderHistory();

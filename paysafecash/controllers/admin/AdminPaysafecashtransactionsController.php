@@ -27,13 +27,6 @@ class AdminPaysafecashtransactionsController extends ModuleAdminController
             'transaction_time' => ['title' => 'Created','type'=>'datetime'],
         ];
 
-        if(isset($_GET["updatepaysafecashtransaction"])){
-           // $this->displayUpdatepaysafecashtransactionAction();
-        }
-    }
-
-    public function getFromClause(){
-
     }
 
     public function displayUpdatepaysafecashtransactionAction()

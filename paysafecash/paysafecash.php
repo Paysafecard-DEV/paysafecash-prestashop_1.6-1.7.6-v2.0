@@ -428,6 +428,10 @@ class paysafecash extends PaymentModule
 
     }
 
+    public function displayOrderConfirmation($params){
+        Logger::AddLog("paysafecash ORDERCONFIRMATION DISPLAY", 1);
+    }
+
 
     public function hookDisplayPaymentReturn($params)
     {
