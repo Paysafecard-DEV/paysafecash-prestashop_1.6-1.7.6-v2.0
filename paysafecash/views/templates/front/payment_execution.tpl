@@ -2,8 +2,6 @@
 	<a href="{$link->getPageLink('order', true, NULL, "step=3")|escape:'html':'UTF-8'}" title="{l s='Go back to the Checkout' mod='paysafecash'}">{l s='Checkout' mod='paysafecash'}</a><span class="navigation-pipe">{$navigationPipe}</span>{l s='Paysafecash payment' mod='paysafecash'}
 {/capture}
 
-{include file="$tpl_dir./breadcrumb.tpl"}
-
 <h2>{l s='Order summary' mod='paysafecash'}</h2>
 
 {assign var='current_step' value='payment'}

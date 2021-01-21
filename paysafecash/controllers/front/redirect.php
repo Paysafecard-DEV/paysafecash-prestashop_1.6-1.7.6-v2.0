@@ -26,6 +26,7 @@
 
 class paysafecashRedirectModuleFrontController extends ModuleFrontController
 {
+    public $version = '2.0.0';
     public $ssl = true;
     public $display_column_left = false;
 
@@ -43,9 +44,8 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
 
             $cart = $this->context->cart;
             $currency = new Currency($cart->id_currency);
-            $order_id = Order::getOrderByCartId((int)$cart->id);
-            $order = new Order($order_id);
             $address = new Address($this->context->cart->id_address_invoice);
+            $customer = new Customer($address->id_customer);
             $testmode = Configuration::get('PAYSAFECASH_TEST_MODE');
             $debugmode = Configuration::get('PAYSAFECASH_TEST_MODE');
 
@@ -80,22 +80,27 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
                 'webhook',
                 array('cart_id' => $cart->id,
                     'secure_key' => Context::getContext()->customer->secure_key),
-                null,
-                null,
+                false,
+                false,
                 Configuration::get('PS_SHOP_DEFAULT')
             );
+            $notification_url = str_replace("http", "https", $notification_url);
+
+            Logger::AddLog(json_encode("Webhook URL:". $notification_url), 1);
 
             $ip = isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
 
             $time_limit = 4000;
 
             if (Configuration::get('PAYSAFECASH_DATA_TAKEOVER_MODE') == true) {
+                Logger::AddLog(json_encode($this->context->cart), 1);
                 $customer_data = ["first_name" => $address->firstname,
                     "last_name" => $address->lastname,
                     "address1" => $address->address1,
                     "postcode" => $address->postcode,
                     "city" => $address->city,
                     "phone_number" => $address->phone,
+                    "email" => $customer->email,
                 ];
             } else {
                 $customer_data = array();
@@ -109,9 +114,7 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
             }
 
             if (isset($response["object"])) {
-                $query = 'INSERT INTO `' . _DB_PREFIX_ . "paysafecashtransaction` (`transaction_id`, `transaction_time`, `order_id`, `cart_id`, `status`) VALUES ( '" . $response["id"] . "', '" . $cart->date_upd . "', '" . $order->id . "', '" . $cart->id . "', '" . $response["status"] . "'); ";
 
-                Db::getInstance()->Execute($query);
                 $this->context->smarty->assign(array(
                     'redirect_url' => $response["redirect"]['auth_url']
                 ));
@@ -121,6 +124,9 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
                 $payment_status = Configuration::get('PAYSAFECASH_OS_WAITING');
                 $secure_key = Context::getContext()->customer->secure_key;
                 $this->module->validateOrder((int)$cart->id, $payment_status, $cart->getOrderTotal(), $module_name, $message, array(), (int)$currency->id, false, $secure_key);
+                $order_id = Order::getOrderByCartId((int)$cart->id);
+                $query = 'INSERT INTO `' . _DB_PREFIX_ . "paysafecashtransaction` (`transaction_id`, `transaction_time`, `order_id`, `cart_id`, `status`) VALUES ( '" . $response["id"] . "', '" . $cart->date_upd . "', '" . $order_id . "', '" . $cart->id . "', '" . $response["status"] . "'); ";
+                Db::getInstance()->Execute($query);
 
                 header("Location: " . $response["redirect"]['auth_url']);
 
@@ -130,7 +136,7 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
                 ));
             }
 
-            return $this->display(__FILE__, 'views/templates/front/redirect.tpl');
+            $this->setTemplate('redirect.tpl');
 
         }
     }

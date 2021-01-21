@@ -1,6 +1,6 @@
 <?php
 
-class PaysafecashtransactionClass extends ObjectModel {
+class Paysafecashtransaction extends ObjectModel {
     public $id_paysafecashtransaction;
     public $transaction_id;
     public $order_id;

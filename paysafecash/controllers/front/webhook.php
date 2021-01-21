@@ -4,6 +4,7 @@ use phpseclib\Crypt\RSA;
 
 class paysafecashWebhookModuleFrontController extends ModuleFrontController
 {
+    public $version = '2.0.0';
     public $ssl = true;
     public $display_column_left = false;
 
@@ -164,10 +165,19 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
                 $query = 'UPDATE `' . _DB_PREFIX_ . "paysafecashtransaction` SET `status` = 'EXPIRED' WHERE `prstshp_paysafecashtransaction`.`transaction_id` = '" . $payment_id . "';";
                 $results = Db::getInstance()->execute($query);
                 $history = new OrderHistory();
-                $history->id_order = (int)$order->id;
+
+                $query = 'SELECT `order_id` FROM `' . _DB_PREFIX_ . "paysafecashtransaction` WHERE `transaction_id` = '".$payment_id."' ORDER BY `transaction_time` DESC LIMIT 1;";
+                $sql_q = Db::getInstance()->executeS($query);
+                $order_id = $sql_q[0]["order_id"];
+                if ($debugmode == "1") {
+                    Logger::AddLog("paysafecash WEBHOOK: PAYMENT_EXPIRED ID:". $order_id , 1);
+                }
+
+                $history->id_order = $order_id;
                 $history->setFieldsToUpdate(["transaction_id" => $payment_id]);
-                $history->changeIdOrderState((int)Configuration::get('PAYSAFECASH_OS_EXPIRED'), $history->id_order);
+                $history->changeIdOrderState(6, $history->id_order);
                 $history->add(true);
+                $history->addWithemail();
                 $history->save();
             }
         }

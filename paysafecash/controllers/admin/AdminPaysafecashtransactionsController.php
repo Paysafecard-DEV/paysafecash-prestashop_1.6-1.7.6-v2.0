@@ -17,25 +17,63 @@ class AdminPaysafecashtransactionsController extends ModuleAdminController
         $this->_defaultOrderBy = 'a.id_paysafecashtransaction';
         $this->_defaultOrderWay = 'DESC';
         $this->identifier = 'id_paysafecashtransaction';
+        $this->actions_available = array();
+
+        parent::__construct();
 
         $this->fields_list = [
-            'id' => ['title' => 'ID','class' => 'fixed-width-xs'],
             'transaction_id' => ['title' => 'Transaction ID'],
             'order_id' => ['title' => 'Order ID'],
             'cart_id' => ['title' => 'Cart ID'],
             'status' => ['title' => 'Status'],
             'transaction_time' => ['title' => 'Created','type'=>'datetime'],
         ];
-
     }
 
-    public function displayUpdatepaysafecashtransactionAction()
+    public function renderForm()
     {
-        /**/
-        $content = $this->context->smarty->fetch(_PS_MODULE_DIR_ . 'paysafecash/views/templates/admin/transactions.tpl');
-        $this->context->smarty->assign(array(
-            "content" => $content,
-        ));
+        $this->fields_form = [
+            'legend' => [
+                'title' => $this->module->l('Show Transaction'),
+                'icon' => 'icon-cog'
+            ],
+            'input' => [
+                [
+                    'type' => 'text',
+                    'label' => $this->module->l('Transaction ID'),
+                    'name' => 'transaction_id',
+                    'readonly' => true,
+                ],
+                [
+                    'type' => 'text',
+                    'label' => $this->module->l('Order ID'),
+                    'name' => 'order_id',
+                    'readonly' => true,
+                ],
+                [
+                    'type' => 'text',
+                    'label' => $this->module->l('Cart ID'),
+                    'name' => 'cart_id',
+                    'readonly' => true,
+                ],
+                [
+                    'type' => 'text',
+                    'label' => $this->module->l('Status'),
+                    'name' => 'status',
+                    'readonly' => true,
+                ],
+                [
+                    'type' => 'text',
+                    'label' => $this->module->l('Created'),
+                    'name' => 'transaction_time',
+                    'readonly' => true,
+                ],
+            ],
+            'submit' => [
+                'title' => $this->l('Ok'),
+            ]
+        ];
+        return parent::renderForm();
     }
 
 }
