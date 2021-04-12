@@ -333,13 +333,18 @@ class paysafecash extends PaymentModule
             $this->context->controller->errors[] = $this->l('The refund amount is higher than the Transaction amount.');
             return false;
         }
+        $this->context->controller->success[] = $this->l('Amount was successfully refunded.');
+        $this->success[] = $this->l('Information successfully updated.');
 
         if ($paymentDetail == false || isset($paymentDetail['number'])) {
 
         } else if (isset($paymentDetail["object"])) {
             if ($paymentDetail["status"] == "SUCCESS") {
                 $response = $pscrefund->captureRefund($payment_id, $amount, $paymentDetail["currency"], $paymentDetail["customer"]["id"], $correlation_id);
+                $this->context->controller->success[] = $this->l('Amount was successfully refunded.');
+                $this->success[] = $this->l('Information successfully updated.');
             } elseif ($paymentDetail["status"] == "REDIRECTED") {
+
                 // successful got details, but is in invalid state -> no refund can be processed
             }
         }
@@ -377,20 +382,38 @@ class paysafecash extends PaymentModule
      */
     public function hookPaymentReturn($params)
     {
-        $order = $params['objOrder'];
+        $state = $params['order']->getCurrentState();
+        if (
+        in_array(
+            $state,
+            array(
+                Configuration::get('PAYSAFECASH_OS_WAITING'),
+                Configuration::get('PAYSAFECASH_OS_PAID'),
+            )
+        )) {
 
-        if ($order->getCurrentOrderState()->id != Configuration::get('PS_OS_ERROR')) {
-            $this->smarty->assign('status', 'ok');
+            $totalToPaid = $params['order']->getOrdersTotalPaid() - $params['order']->getTotalPaid();
+            $this->smarty->assign(array(
+                'shop_name' => $this->context->shop->name,
+                'total' => Tools::displayPrice(
+                    $totalToPaid,
+                    new Currency($params['order']->id_currency),
+                    false
+                ),
+                'status' => 'ok',
+                'reference' => $params['order']->reference,
+                'contact_url' => $this->context->link->getPageLink('contact', true)
+            ));
+        } else {
+            $this->smarty->assign(
+                array(
+                    'status' => 'failed',
+                    'contact_url' => $this->context->link->getPageLink('contact', true),
+                )
+            );
         }
 
-        $this->smarty->assign(array(
-            'id_order' => $order->id,
-            'reference' => $order->reference,
-            'params' => $params,
-            'total' => Tools::displayPrice($params['total_to_pay'], $params['currencyObj'], false)
-        ));
-
-        return $this->display(__FILE__, 'views/templates/hook/confirmation.tpl');
+        return $this->fetch('module:paysafecash/views/templates/hook/confirmation.tpl');
     }
 
     public function hookActionOrderStatusUpdate($params) {
@@ -425,11 +448,15 @@ class paysafecash extends PaymentModule
     }
     public function hookActionProductCancel($params)
     {
+        $payment = "";
+        $amount = 0.00;
+        Logger::AddLog("paysafecash Cancel". print_r($params), 1);
 
+        $this->processRefund($payment, number_format($amount, 2, '.', ''));
     }
 
     public function displayOrderConfirmation($params){
-        Logger::AddLog("paysafecash ORDERCONFIRMATION DISPLAY", 1);
+
     }
 
 

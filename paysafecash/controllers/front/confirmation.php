@@ -13,14 +13,8 @@ class paysafecashConfirmationModuleFrontController extends ModuleFrontController
         require_once(_PS_MODULE_DIR_ . $this->module->name . "/vendor/autoload.php");
         require_once(_PS_MODULE_DIR_ . $this->module->name . "/libs/PaymentClass.php");
 
-        $cart_id = Tools::getValue('cart_id');
         $secure_key = Tools::getValue('secure_key');
         $message = null;
-
-        $cart = new Cart((int)$cart_id);
-        $currency_id = $cart->id_currency;
-        $payment_status = Configuration::get('PAYSAFECASH_OS_PAID');
-
         $cart_id = Tools::getValue('cart_id');
 
         $cart = new Cart((int)$cart_id);
@@ -29,9 +23,7 @@ class paysafecashConfirmationModuleFrontController extends ModuleFrontController
         $message = null;
 
         $cart = new Cart((int)$cart_id);
-        $currency_id = $cart->id_currency;
 
-        $payment_id = $payment_str->data->mtid;
         $order_id = Order::getOrderByCartId((int)$cart->id);
         $order = new Order($order_id);
 

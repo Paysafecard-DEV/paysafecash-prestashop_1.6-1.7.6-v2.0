@@ -107,7 +107,11 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
             }
 
             $ordertotal = $cart->getOrderTotal(true, Cart::BOTH);
+            Logger::AddLog("Cart: ". json_encode(print_r($cart, true)), 1);
+            Logger::AddLog("Total: ". $ordertotal, 1);
             $response = $pscpayment->initiatePayment($ordertotal, $currency->iso_code, md5(Context::getContext()->customer->id), $ip, $success_url, $failure_url, $notification_url . "&payment_id={payment_id}", $customer_data, $time_limit, $correlation_id = "", $country_restriction = "", $kyc_restriction = "", $min_age = "", $shop_id = "Presta: " . _PS_VERSION_ . " | " . $this->version, Configuration::get('PAYSAFECASH_SUBMERCHANT_ID'));
+
+            //Logger::AddLog("Request: ". json_encode(print_r($pscpayment, true)), 1);
 
             if ($debugmode == "1") {
                 Logger::AddLog(json_encode($response), 1);
@@ -128,7 +132,7 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
                 $query = 'INSERT INTO `' . _DB_PREFIX_ . "paysafecashtransaction` (`transaction_id`, `transaction_time`, `order_id`, `cart_id`, `status`) VALUES ( '" . $response["id"] . "', '" . $cart->date_upd . "', '" . $order_id . "', '" . $cart->id . "', '" . $response["status"] . "'); ";
                 Db::getInstance()->Execute($query);
 
-                header("Location: " . $response["redirect"]['auth_url']);
+                Tools::redirect($response["redirect"]['auth_url']);
 
             } else {
                 $this->context->smarty->assign(array(
@@ -136,7 +140,7 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
                 ));
             }
 
-            $this->setTemplate('redirect.tpl');
+            return $this->setTemplate('module:paysafecash/views/templates/front/redirect.tpl');
 
         }
     }
