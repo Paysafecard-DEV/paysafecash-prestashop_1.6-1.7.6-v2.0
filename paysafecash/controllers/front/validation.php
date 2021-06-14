@@ -53,10 +53,6 @@ class PaysafecashValidationModuleFrontController extends ModuleFrontController
 
         $pscpayment = new PaysafecardCashController( Configuration::get('PAYSAFECASH_API_KEY'), $env );
         $response   = $pscpayment->retrievePayment( $payment_id );
-
-        exec('echo "Retrieve: '. print_r($response, true).'" >> /tmp/presta.log');
-
-
         $cart = new Cart((int)$cart_id);
         $currency_id = $cart->id_currency;
         $id_cart = $this->context->cart->id;
@@ -66,10 +62,8 @@ class PaysafecashValidationModuleFrontController extends ModuleFrontController
 
         } else if ( isset( $response["object"] ) ) {
             if ( $response["status"] == "SUCCESS" ) {
-                exec('echo " Payment Success: '.print_r($response, true).'" >> /tmp/presta.log');
                 if ($order->getCurrentState() ==  Configuration::get('PAYSAFECASH_OS_WAITING')) {
                     $order->setCurrentState(Configuration::get('PAYSAFECASH_OS_PAID'));
-                    exec('echo " Payment Success: Set status" >> /tmp/presta.txt');
                     return $this->module->validateOrder($cart_id, $payment_status, $cart->getOrderTotal(), $module_name, $message, array("transaction_id" => $payment_id), $currency_id, false, $secure_key);
                 }
             } else if ( $response["status"] == "INITIATED" ) {
@@ -77,14 +71,10 @@ class PaysafecashValidationModuleFrontController extends ModuleFrontController
             } else if ( $response["status"] == "EXPIRED" ) {
             } else if ( $response["status"] == "AUTHORIZED" ) {
                 $response = $pscpayment->capturePayment( $payment_id );
-                exec('echo "Authorized: '.print_r($response, true).'" >> /tmp/presta.log');
                 if ( $response == true ) {
-                    exec('echo "Success Transaction before" >> /tmp/presta.txt');
                     if ( isset( $response["object"] ) ) {
                         if ( $response["status"] == "SUCCESS" ) {
-                            exec('echo "Success Transaction Cart: '.$cart_id.'" >> /tmp/presta.log');
                             $order = Order::getByCartId($cart_id);
-                            exec('echo "Status Change: ' . Configuration::get('PAYSAFECASH_OS_PAID') . ' " >> /tmp/presta.log');
                             $order->setCurrentState(Configuration::get('PAYSAFECASH_OS_PAID'));
 
                             $history = new OrderHistory();

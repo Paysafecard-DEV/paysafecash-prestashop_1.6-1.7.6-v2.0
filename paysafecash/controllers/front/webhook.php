@@ -155,46 +155,23 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
 
                 } else {
                     $query = 'UPDATE `' . _DB_PREFIX_ . "paysafecashtransaction` SET `status` = 'SUCCESS' WHERE `"._DB_PREFIX_."paysafecashtransaction`.`transaction_id` = '" . $payment_id . "';";
-                    if ($debugmode == "1") {
-                        Logger::AddLog("paysafecash WEBHOOK: SQL:" . $query, 1);
-                    }
                     $results = Db::getInstance()->execute($query);
-                    if ($debugmode == "1") {
-                        Logger::AddLog("paysafecash Tansactions Update " . print_r($results, true), 1);
-                    }
                     $history = new OrderHistory();
                     $history->id_order = (int)$order->id;
                     $history->setFieldsToUpdate(["transaction_id" => $payment_id]);
                     $history->changeIdOrderState((int)Configuration::get('PAYSAFECASH_OS_PAID'), $order);
                     $history->add(true);
                     $history->save();
-
-                    if ($debugmode == "1") {
-                        Logger::AddLog("paysafecash WEBHOOK Order: " . json_encode($order), 1);
-                    }
-                    if ($debugmode == "1") {
-                        Logger::AddLog("paysafecash WEBHOOK History: " . print_r($history, true), 1);
-                    }
                 }
             }
             if ($payment_str->eventType == "PAYMENT_EXPIRED") {
-                if ($debugmode == "1") {
-                    Logger::AddLog("paysafecash WEBHOOK: PAYMENT_EXPIRED", 1);
-                }
                 $query = 'UPDATE `' . _DB_PREFIX_ . "paysafecashtransaction` SET `status` = 'EXPIRED' WHERE `"._DB_PREFIX_."paysafecashtransaction`.`transaction_id` = '" . $payment_id . "';";
-                if ($debugmode == "1") {
-                    Logger::AddLog("paysafecash WEBHOOK: SQL:" . $query, 1);
-                }
                 $results = Db::getInstance()->execute($query);
                 $history = new OrderHistory();
 
                 $query = 'SELECT `order_id` FROM `' . _DB_PREFIX_ . "paysafecashtransaction` WHERE `transaction_id` = '" . $payment_id . "' ORDER BY `transaction_time` DESC LIMIT 1;";
                 $sql_q = Db::getInstance()->executeS($query);
                 $order_id = $sql_q[0]["order_id"];
-                if ($debugmode == "1") {
-                    Logger::AddLog("paysafecash WEBHOOK: PAYMENT_EXPIRED ID:" . $order_id, 1);
-                }
-
                 $history->id_order = $order_id;
                 $history->setFieldsToUpdate(["transaction_id" => $payment_id]);
                 $history->changeIdOrderState(6, $history->id_order);

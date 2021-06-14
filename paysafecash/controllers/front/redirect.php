@@ -115,7 +115,7 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
             $response = $pscpayment->initiatePayment($ordertotal, $currency->iso_code, md5(Context::getContext()->customer->email), $ip, $success_url, $failure_url, $notification_url, $customer_data, $time_limit, $correlation_id = "", $country_restriction = "", $kyc_restriction = "", $min_age = "", $shop_id = "Presta: " . _PS_VERSION_ . " | " . $this->version, Configuration::get('PAYSAFECASH_SUBMERCHANT_ID'));
 
             if ($debugmode == "1") {
-                Logger::AddLog(json_encode($response), 1);
+                Logger::AddLog("Prestashop IniLog: ". json_encode($pscpayment->getError()), 1);
             }
 
             if (isset($response["object"])) {

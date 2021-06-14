@@ -26,15 +26,15 @@
 
 $sql = array();
 
-$sql[] = 'CREATE TABLE `ps_paysafecashtransaction` (
+$sql[] = 'CREATE TABLE `'._DB_PREFIX_.'_paysafecashtransaction` (
   `transaction_id` varchar(55) NOT NULL,
   `transaction_time` varchar(70) DEFAULT NULL,
   `order_id` varchar(20) DEFAULT NULL,
   `cart_id` int(20) NOT NULL,
   `status` varchar(10) DEFAULT NULL,
-  `refunded_amount` float DEFAULT 0,
+  `refunded_amount` float DEFAULT \'0.00\',
   PRIMARY KEY (`transaction_id`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;';
 
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {
