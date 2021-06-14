@@ -34,10 +34,7 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
         $payment_str = file_get_contents("php://input");
         $cart_id = Tools::getValue('cart_id');
 
-        $cart = new Cart((int)$cart_id);
-        $customer = new Customer((int)$cart->id_customer);
         $message = null;
-        $order_id = Order::getOrderByCartId((int)$cart->id);
         $testmode = Configuration::get('PAYSAFECASH_TEST_MODE');
         $debugmode = Configuration::get('PAYSAFECASH_DEBUG');
         $signatur_check = 0;
@@ -59,9 +56,6 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
             if ($debugmode == "1") {
                 Logger::AddLog("paysafecash WEBHOOK: Signature Error", 1);
                 Logger::AddLog("paysafecash WEBHOOK: Header->" . json_encode(apache_request_headers()), 1);
-                Logger::AddLog("paysafecash WEBHOOK: Signaturer->" . $signature, 1);
-                Logger::AddLog("paysafecash WEBHOOK: Key->" . Configuration::get('PAYSAFECASH_WEBHOOK_KEY'), 1);
-
             }
         }
         if(isset($pubkey)){
@@ -77,7 +71,6 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
 
         $payment_str = json_decode($payment_str);
         $payment_id = $payment_str->data->mtid;
-
         $order_id = Order::getOrderByCartId((int)$cart->id);
         $order = new Order($order_id);
 
@@ -91,11 +84,18 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
         }
 
         if ($signatur_check == 1 || $skip_validation == true) {
+            if ($debugmode == "1") {
+                Logger::AddLog("paysafecash: Webhook Status: ". $payment_str->eventType, 1);
+            }
+
             if ($payment_str->eventType == "PAYMENT_CAPTURED") {
                 if ($debugmode == "1") {
                     Logger::AddLog("paysafecash WEBHOOK: PAYMENT_CAPTURED", 1);
                 }
-                if ($skip_validation) {
+                if ($skip_validation == true) {
+                    if ($debugmode == "1") {
+                        Logger::AddLog("paysafecash WEBHOOK: Verification skiped!", 1);
+                    }
                     if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
                         $ip = $_SERVER['HTTP_CLIENT_IP'];
                     } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
@@ -103,7 +103,7 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
                     } else {
                         $ip = $_SERVER['REMOTE_ADDR'];
                     }
-                    if ($ip == "194.1.158.23") {
+                    if (($ip == "194.1.158.23") || ($ip == "3.127.106.50") || ($ip == "3.126.164.128") || ($ip == "3.127.123.143")) {
                         require_once(_PS_MODULE_DIR_ . $this->module->name . "/libs/PaymentClass.php");
 
                         $testmode = Configuration::get('PAYSAFECASH_TEST_MODE');
@@ -154,7 +154,10 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
                     }
 
                 } else {
-                    $query = 'UPDATE `' . _DB_PREFIX_ . "paysafecashtransaction` SET `status` = 'SUCCESS' WHERE `"._DB_PREFIX_."_paysafecashtransaction`.`transaction_id` = '" . $payment_id . "';";
+                    $query = 'UPDATE `' . _DB_PREFIX_ . "paysafecashtransaction` SET `status` = 'SUCCESS' WHERE `"._DB_PREFIX_."paysafecashtransaction`.`transaction_id` = '" . $payment_id . "';";
+                    if ($debugmode == "1") {
+                        Logger::AddLog("paysafecash WEBHOOK: SQL:" . $query, 1);
+                    }
                     $results = Db::getInstance()->execute($query);
                     if ($debugmode == "1") {
                         Logger::AddLog("paysafecash Tansactions Update " . print_r($results, true), 1);
@@ -178,7 +181,10 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
                 if ($debugmode == "1") {
                     Logger::AddLog("paysafecash WEBHOOK: PAYMENT_EXPIRED", 1);
                 }
-                $query = 'UPDATE `' . _DB_PREFIX_ . "paysafecashtransaction` SET `status` = 'EXPIRED' WHERE `"._DB_PREFIX_."_paysafecashtransaction`.`transaction_id` = '" . $payment_id . "';";
+                $query = 'UPDATE `' . _DB_PREFIX_ . "paysafecashtransaction` SET `status` = 'EXPIRED' WHERE `"._DB_PREFIX_."paysafecashtransaction`.`transaction_id` = '" . $payment_id . "';";
+                if ($debugmode == "1") {
+                    Logger::AddLog("paysafecash WEBHOOK: SQL:" . $query, 1);
+                }
                 $results = Db::getInstance()->execute($query);
                 $history = new OrderHistory();
 
@@ -198,7 +204,7 @@ class paysafecashWebhookModuleFrontController extends ModuleFrontController
             }
         }
 
-        $this->setTemplate('webhook.tpl');
+        $this->setTemplate('module:paysafecash/views/templates/front/webhook.tpl');
     }
 }
 

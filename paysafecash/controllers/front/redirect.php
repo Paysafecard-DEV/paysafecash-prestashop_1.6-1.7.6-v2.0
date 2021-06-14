@@ -26,7 +26,7 @@
 
 class paysafecashRedirectModuleFrontController extends ModuleFrontController
 {
-    public $version = '2.0.0';
+    public $version = '2.1.0';
     public $ssl = true;
     public $display_column_left = false;
 
@@ -86,8 +86,6 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
             );
             $notification_url = str_replace("http", "https", $notification_url);
 
-            Logger::AddLog(json_encode("Webhook URL:". $notification_url), 1);
-
             $ip = isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
 
             $time_limit = 4000;
@@ -107,11 +105,14 @@ class paysafecashRedirectModuleFrontController extends ModuleFrontController
             }
 
             $ordertotal = $cart->getOrderTotal(true, Cart::BOTH);
-            Logger::AddLog("Cart: ". json_encode(print_r($cart, true)), 1);
-            Logger::AddLog("Total: ". $ordertotal, 1);
-            $response = $pscpayment->initiatePayment($ordertotal, $currency->iso_code, md5(Context::getContext()->customer->id), $ip, $success_url, $failure_url, $notification_url . "&payment_id={payment_id}", $customer_data, $time_limit, $correlation_id = "", $country_restriction = "", $kyc_restriction = "", $min_age = "", $shop_id = "Presta: " . _PS_VERSION_ . " | " . $this->version, Configuration::get('PAYSAFECASH_SUBMERCHANT_ID'));
 
-            //Logger::AddLog("Request: ". json_encode(print_r($pscpayment, true)), 1);
+            if ($ordertotal >= 1000) {
+                $this->context->smarty->assign(array(
+                    'error_msg' => $this->l("The amount is too high, please lower your cart amount to 1000.00 max."),
+                ));
+                return $this->setTemplate('module:paysafecash/views/templates/front/redirect.tpl');
+            }
+            $response = $pscpayment->initiatePayment($ordertotal, $currency->iso_code, md5(Context::getContext()->customer->email), $ip, $success_url, $failure_url, $notification_url, $customer_data, $time_limit, $correlation_id = "", $country_restriction = "", $kyc_restriction = "", $min_age = "", $shop_id = "Presta: " . _PS_VERSION_ . " | " . $this->version, Configuration::get('PAYSAFECASH_SUBMERCHANT_ID'));
 
             if ($debugmode == "1") {
                 Logger::AddLog(json_encode($response), 1);

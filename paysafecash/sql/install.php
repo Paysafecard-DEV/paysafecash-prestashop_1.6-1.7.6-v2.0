@@ -26,14 +26,14 @@
 
 $sql = array();
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'paysafecashtransaction` (
-    `id_paysafecashtransaction` int(11) NOT NULL AUTO_INCREMENT,
-    `transaction_id` VARCHAR(55) NULL,
-    `transaction_time` VARCHAR(70) NULL,
-    `order_id` VARCHAR(20) NULL,
-    `cart_id` INT(20) NOT NULL,
-    `status` VARCHAR(10) NULL,
-    PRIMARY KEY  (`id_paysafecashtransaction`)
+$sql[] = 'CREATE TABLE `ps_paysafecashtransaction` (
+  `transaction_id` varchar(55) NOT NULL,
+  `transaction_time` varchar(70) DEFAULT NULL,
+  `order_id` varchar(20) DEFAULT NULL,
+  `cart_id` int(20) NOT NULL,
+  `status` varchar(10) DEFAULT NULL,
+  `refunded_amount` float DEFAULT 0,
+  PRIMARY KEY (`transaction_id`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
 foreach ($sql as $query) {

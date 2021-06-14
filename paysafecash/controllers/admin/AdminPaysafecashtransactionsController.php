@@ -14,7 +14,7 @@ class AdminPaysafecashtransactionsController extends ModuleAdminController
         $this->table = 'paysafecashtransaction';
         $this->className = 'Paysafecashtransaction';
         $this->allow_export = false;
-        $this->_defaultOrderBy = 'a.id_paysafecashtransaction';
+        $this->_defaultOrderBy = 'a.transaction_time';
         $this->_defaultOrderWay = 'DESC';
         $this->identifier = 'id_paysafecashtransaction';
         $this->actions_available = array();
@@ -26,6 +26,7 @@ class AdminPaysafecashtransactionsController extends ModuleAdminController
             'order_id' => ['title' => 'Order ID'],
             'cart_id' => ['title' => 'Cart ID'],
             'status' => ['title' => 'Status'],
+            'refunded_amount' => ['title' => 'Refunded Amount'],
             'transaction_time' => ['title' => 'Created','type'=>'datetime'],
         ];
     }
@@ -60,6 +61,12 @@ class AdminPaysafecashtransactionsController extends ModuleAdminController
                     'type' => 'text',
                     'label' => $this->module->l('Status'),
                     'name' => 'status',
+                    'readonly' => true,
+                ],
+                [
+                    'type' => 'text',
+                    'label' => $this->module->l('Refunded Amount'),
+                    'name' => 'refunded_amount',
                     'readonly' => true,
                 ],
                 [
